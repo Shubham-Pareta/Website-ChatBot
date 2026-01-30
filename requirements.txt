@@ -4,6 +4,7 @@ beautifulsoup4
 langchain
 langchain-community
 langchain-text-splitters
+langchain-groq
 chromadb
 sentence-transformers
 groq
