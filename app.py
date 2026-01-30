@@ -3,7 +3,7 @@ from crawler import get_all_links, extract_text_and_title
 from rag_pipeline import process_website, get_answer
 
 st.set_page_config(page_title="Website RAG Chatbot")
-st.title("Website RAG Chatbot (Groq Powered)")
+st.title("Website RAG Chatbot")
 
 if "vectordb" not in st.session_state:
     st.session_state.vectordb = None
