@@ -24,7 +24,7 @@ def get_answer(question, vectordb):
     context = "\n\n".join(d.page_content[:300] for d in docs)
 
     llm = ChatGroq(
-        model="llama3-8b-8192",
+        model="llama3-70b-8192",
         groq_api_key=os.getenv("GROQ_API_KEY"),
         temperature=0
     )
