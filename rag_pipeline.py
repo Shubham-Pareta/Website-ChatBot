@@ -14,7 +14,7 @@ client = OpenAI(
 )
 
 def process_website(texts, metadatas):
-    splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=120)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=200)
     docs = splitter.create_documents(texts, metadatas=metadatas)
 
     vectordb = Chroma.from_documents(
@@ -26,35 +26,35 @@ def process_website(texts, metadatas):
 
 
 def get_answer(question, vectordb):
-    retriever = vectordb.as_retriever(search_kwargs={"k": 4})
+    retriever = vectordb.as_retriever(search_kwargs={"k": 6})
 
     if len(question.split()) <= 2:
         question = "Explain " + question
 
     docs = retriever.invoke(question)
-    context = "\n\n".join(d.page_content[:300] for d in docs)
 
-    try:
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Use ONLY the provided context to answer. "
-                               "If the answer is not in the context, say exactly: "
-                               "'The answer is not available on the provided website.'"
-                },
-                {
-                    "role": "user",
-                    "content": f"Context:\n{context}\n\nQuestion:\n{question}"
-                }
-            ],
-            temperature=0,
-            max_tokens=200
-        )
+    context = "\n\n".join(d.page_content for d in docs)
 
-        return response.choices[0].message.content.strip()
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are answering using website extracts. "
+                    "The context may contain multiple text fragments from the same article. "
+                    "They ARE related. Combine them logically to answer. "
+                    "Use only the context. If missing, say: "
+                    "'The answer is not available on the provided website.'"
+                )
+            },
+            {
+                "role": "user",
+                "content": f"Context:\n{context}\n\nQuestion:\n{question}"
+            }
+        ],
+        temperature=0,
+        max_tokens=300
+    )
 
-    except Exception as e:
-        print("LLM ERROR:", e)
-        return "⚠️ LLM request failed. Check API key or model name."
+    return response.choices[0].message.content.strip()
