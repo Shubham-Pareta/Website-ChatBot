@@ -31,7 +31,7 @@ def get_answer(question, vectordb):
     docs = retriever.invoke(question)
 
     context = "\n\n".join(d.page_content for d in docs)
-    context = context[:1800]
+    context = context[:1200]
 
     prompt = f"""
 You are a website question-answering assistant.
