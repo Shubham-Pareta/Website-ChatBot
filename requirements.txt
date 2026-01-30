@@ -4,7 +4,6 @@ beautifulsoup4
 langchain
 langchain-community
 langchain-text-splitters
-chromadb
 sentence-transformers
+chromadb
 openai
-tiktoken

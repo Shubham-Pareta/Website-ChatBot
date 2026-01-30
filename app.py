@@ -30,12 +30,13 @@ if st.button("Index Website") and url:
         else:
             st.error("No readable content found.")
 
-# Show last Q&A only
+# Show recent chat
 if st.session_state.messages:
-    for msg in st.session_state.messages[-2:]:
+    for msg in st.session_state.messages[-6:]:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
 
+# Chat input
 if st.session_state.vectordb:
     user_input = st.chat_input("Ask a question")
 
