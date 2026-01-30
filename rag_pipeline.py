@@ -1,7 +1,7 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_groq import ChatGroq
+from openai import OpenAI
 import os
 
 # Embedding model
@@ -20,27 +20,29 @@ def get_answer(question, vectordb):
     retriever = vectordb.as_retriever(search_kwargs={"k": 4})
     docs = retriever.invoke(question)
 
-    # Reduce size to avoid token overflow
     context = "\n\n".join(d.page_content[:300] for d in docs)
 
-    llm = ChatGroq(
-        model="llama3-70b-8192",
-        groq_api_key=os.getenv("GROQ_API_KEY"),
-        temperature=0
+    client = OpenAI(
+        api_key=os.getenv("GROQ_API_KEY"),
+        base_url="https://api.groq.com/openai/v1"
     )
 
-    messages = [
-        (
-            "system",
-            "Answer using ONLY the provided website context. "
-            "If the answer is not present, reply exactly: "
-            "'The answer is not available on the provided website.'"
-        ),
-        (
-            "human",
-            f"Context:\n{context}\n\nQuestion:\n{question}"
-        )
-    ]
+    response = client.chat.completions.create(
+        model="mixtral-8x7b-32768",
+        messages=[
+            {
+                "role": "system",
+                "content": "Answer only using the given website context. "
+                           "If not found, reply exactly: "
+                           "The answer is not available on the provided website."
+            },
+            {
+                "role": "user",
+                "content": f"Context:\n{context}\n\nQuestion:\n{question}"
+            }
+        ],
+        temperature=0,
+        max_tokens=300
+    )
 
-    response = llm.invoke(messages)
-    return response.content
+    return response.choices[0].message.content
