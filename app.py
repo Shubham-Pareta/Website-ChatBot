@@ -3,7 +3,7 @@ from crawler import get_all_links, extract_text_and_title
 from rag_pipeline import process_website, get_answer
 
 st.set_page_config(page_title="Website RAG Chatbot")
-st.title("🌐 Website RAG Chatbot (Groq Powered)")
+st.title("Website RAG Chatbot (Groq Powered)")
 
 if "vectordb" not in st.session_state:
     st.session_state.vectordb = None
@@ -30,18 +30,22 @@ if st.button("Index Website") and url:
         else:
             st.error("No readable content found.")
 
-# Show recent chat
-if st.session_state.messages:
-    for msg in st.session_state.messages[-6:]:
-        with st.chat_message(msg["role"]):
-            st.write(msg["content"])
 
-# Chat input
+# ✅ HANDLE INPUT FIRST
 if st.session_state.vectordb:
     user_input = st.chat_input("Ask a question")
 
     if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
+
         with st.spinner("Thinking..."):
             answer = get_answer(user_input, st.session_state.vectordb)
+
         st.session_state.messages.append({"role": "assistant", "content": answer})
+
+
+# ✅ THEN DISPLAY MESSAGES
+if st.session_state.messages:
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.write(msg["content"])

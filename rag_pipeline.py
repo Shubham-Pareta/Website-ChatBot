@@ -4,12 +4,10 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from openai import OpenAI
 import os
 
-# Local embedding model (no API cost)
 embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-# Groq client using OpenAI-compatible SDK
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
     base_url="https://api.groq.com/openai/v1"
@@ -19,7 +17,6 @@ def process_website(texts, metadatas):
     splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=120)
     docs = splitter.create_documents(texts, metadatas=metadatas)
 
-    # Persist DB so it survives reruns
     vectordb = Chroma.from_documents(
         docs,
         embedding_model,
@@ -39,13 +36,13 @@ def get_answer(question, vectordb):
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",   # ✅ VALID GROQ MODEL
+            model="llama-3.1-8b-instant",
             messages=[
                 {
                     "role": "system",
-                    "content": "Answer ONLY using the website context. "
-                               "If not present, say exactly: "
-                               "The answer is not available on the provided website."
+                    "content": "Use ONLY the provided context to answer. "
+                               "If the answer is not in the context, say exactly: "
+                               "'The answer is not available on the provided website.'"
                 },
                 {
                     "role": "user",
@@ -59,5 +56,5 @@ def get_answer(question, vectordb):
         return response.choices[0].message.content.strip()
 
     except Exception as e:
-        print("LLM ERROR:", e)  # shows in Streamlit logs
+        print("LLM ERROR:", e)
         return "⚠️ LLM request failed. Check API key or model name."
