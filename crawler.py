@@ -43,8 +43,9 @@ def extract_text_and_title(url):
     soup = BeautifulSoup(res.text, "html.parser")
 
     # Remove junk sections
-    for tag in soup(["script", "style", "nav", "footer", "header", "aside", "form", "button"]):
+    for tag in soup(["script", "style", "nav", "footer", "header", "aside", "form"]):
         tag.decompose()
+
 
     title = soup.title.string.strip() if soup.title else ""
     elements = soup.find_all(["p", "h1", "h2", "h3", "li"])

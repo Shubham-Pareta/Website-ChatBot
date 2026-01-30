@@ -1,31 +1,44 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import pipeline
 
-tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-base")
-model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-base")
+# QA model (extracts answers instead of generating)
+qa_pipeline = pipeline(
+    "question-answering",
+    model="deepset/roberta-base-squad2",
+    tokenizer="deepset/roberta-base-squad2"
+)
 
 embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
+
 def process_website(texts, metadatas):
-    splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=100)
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=80
+    )
     docs = splitter.create_documents(texts, metadatas=metadatas)
     return Chroma.from_documents(docs, embedding_model)
 
 
 def get_answer(question, vectordb):
-    retriever = vectordb.as_retriever(search_kwargs={"k": 3})
+    retriever = vectordb.as_retriever(search_kwargs={"k": 4})
     docs = retriever.invoke(question)
 
-    context = " ".join(d.page_content[:200] for d in docs)
+    best_answer = ""
+    best_score = 0
 
-    prompt = f"Answer using the context.\nContext: {context}\nQuestion: {question}"
+    for d in docs:
+        result = qa_pipeline(question=question, context=d.page_content[:1000])
 
-    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
-    outputs = model.generate(**inputs, max_new_tokens=120)
+        if result["score"] > best_score and result["answer"].strip():
+            best_score = result["score"]
+            best_answer = result["answer"]
 
-    answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return answer.strip()
+    if best_score < 0.2:
+        return "The answer is not available on the provided website."
+
+    return best_answer
