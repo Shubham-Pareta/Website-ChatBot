@@ -8,5 +8,5 @@ chromadb
 sentence-transformers
 transformers
 torch
-tiktoken
 sentencepiece
+tiktoken

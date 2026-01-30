@@ -4,7 +4,7 @@ from urllib.parse import urljoin, urlparse
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
-def get_all_links(base_url, max_pages=8):
+def get_all_links(base_url, max_pages=6):
     visited = set()
     to_visit = [base_url]
     domain = urlparse(base_url).netloc
@@ -42,7 +42,8 @@ def extract_text_and_title(url):
 
     soup = BeautifulSoup(res.text, "html.parser")
 
-    for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
+    # Remove junk sections
+    for tag in soup(["script", "style", "nav", "footer", "header", "aside", "form", "button"]):
         tag.decompose()
 
     title = soup.title.string.strip() if soup.title else ""
