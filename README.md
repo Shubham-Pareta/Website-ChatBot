@@ -1,0 +1,8 @@
+Project Overview : This project is a website-based AI chatbot that answers questions using only the content from a user-provided website. It follows a Retrieval-Augmented Generation (RAG) approach to ensure responses are grounded in website data and reduce hallucinations.
+Architecture Explanation : The system crawls the website, cleans the HTML content, splits text into chunks, generates embeddings, and stores them in a vector database. When a question is asked, relevant content is retrieved and sent to the language model to generate a context-based answer.
+Frameworks Used : LangChain is used for managing the RAG pipeline, Streamlit for the user interface, and BeautifulSoup for website content extraction.
+LLM Used and Why : LLaMA 3 (8B) via the Groq API is used because it provides fast cloud inference and good performance without requiring local model hosting.
+Vector Database Used and Why : ChromaDB is used as it is lightweight, easy to integrate, and suitable for small to medium RAG systems.
+Embedding Strategy : Embeddings are generated using the SentenceTransformers model all-MiniLM-L6-v2, chosen for its speed and strong semantic similarity performance.
+Setup and Run Instructions : Install dependencies from requirements.txt, run the app using streamlit run app.py, and add the Groq API key in Streamlit Cloud Secrets for deployment.
+Assumptions, Limitations, and Future Improvements : The system works best on static text-based websites and may not handle dynamic pages well. Future improvements include adding source citations, document support, and better crawling control.
