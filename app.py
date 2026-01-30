@@ -3,7 +3,7 @@ from crawler import get_all_links, extract_text_and_title
 from rag_pipeline import process_website, get_answer
 
 st.set_page_config(page_title="Website RAG Chatbot")
-st.title("Website RAG Chatbot")
+st.title("🌐 Website RAG Chatbot (Groq Powered)")
 
 if "vectordb" not in st.session_state:
     st.session_state.vectordb = None
@@ -14,15 +14,13 @@ url = st.text_input("Enter Website URL")
 
 if st.button("Index Website") and url:
     st.session_state.messages = []
-    st.session_state.vectordb = None
-
     with st.spinner("Processing website..."):
         links = get_all_links(url)
 
         texts, metadatas = [], []
         for link in links:
             text, title = extract_text_and_title(link)
-            if len(text) > 80:
+            if len(text) > 100:
                 texts.append(text)
                 metadatas.append({"source": link, "title": title})
 
@@ -32,10 +30,9 @@ if st.button("Index Website") and url:
         else:
             st.error("No readable content found.")
 
-# Show only latest Q&A
+# Show last Q&A only
 if st.session_state.messages:
-    last_two = st.session_state.messages[-2:]
-    for msg in last_two:
+    for msg in st.session_state.messages[-2:]:
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
 
@@ -44,8 +41,6 @@ if st.session_state.vectordb:
 
     if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
-
         with st.spinner("Thinking..."):
             answer = get_answer(user_input, st.session_state.vectordb)
-
         st.session_state.messages.append({"role": "assistant", "content": answer})
