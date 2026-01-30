@@ -3,8 +3,8 @@ from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from transformers import pipeline
 
-# Load local text-generation model (no API needed)
-generator = pipeline("text2text-generation", model="google/flan-t5-base")
+# Load local model (no API)
+generator = pipeline("text-generation", model="google/flan-t5-base")
 
 embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
