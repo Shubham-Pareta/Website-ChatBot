@@ -10,45 +10,18 @@ embedding_model = HuggingFaceEmbeddings(
 )
 
 
-# 🔹 Build Vector DB
 def process_website(texts, metadatas):
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=700,
-        chunk_overlap=120
-    )
-
+    splitter = RecursiveCharacterTextSplitter(chunk_size=700, chunk_overlap=120)
     docs = splitter.create_documents(texts, metadatas=metadatas)
-    vectordb = Chroma.from_documents(docs, embedding_model)
-
-    return vectordb
+    return Chroma.from_documents(docs, embedding_model)
 
 
-# 🔹 Answer questions
 def get_answer(question, vectordb):
     retriever = vectordb.as_retriever(search_kwargs={"k": 4})
-
-    # ✅ NEW LangChain syntax
     docs = retriever.invoke(question)
 
-    context = "\n\n".join(d.page_content for d in docs)
-    context = context[:1200]
-
-    prompt = f"""
-You are a website question-answering assistant.
-
-Answer ONLY using the context below.
-
-Context:
-{context}
-
-Question:
-{question}
-
-Rules:
-- Do not use outside knowledge
-- If answer is missing, reply exactly:
-The answer is not available on the provided website.
-"""
+    # Reduce size to avoid token overflow
+    context = "\n\n".join(d.page_content[:300] for d in docs)
 
     llm = ChatGroq(
         model="llama3-8b-8192",
@@ -56,5 +29,18 @@ The answer is not available on the provided website.
         temperature=0
     )
 
-    response = llm.invoke(prompt)
+    messages = [
+        (
+            "system",
+            "Answer using ONLY the provided website context. "
+            "If the answer is not present, reply exactly: "
+            "'The answer is not available on the provided website.'"
+        ),
+        (
+            "human",
+            f"Context:\n{context}\n\nQuestion:\n{question}"
+        )
+    ]
+
+    response = llm.invoke(messages)
     return response.content
