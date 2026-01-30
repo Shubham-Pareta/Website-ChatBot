@@ -4,19 +4,31 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
 import os
 
+# Embedding model
 embedding_model = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
+
+# 🔹 Build Vector DB
 def process_website(texts, metadatas):
-    splitter = RecursiveCharacterTextSplitter(chunk_size=700, chunk_overlap=120)
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=700,
+        chunk_overlap=120
+    )
+
     docs = splitter.create_documents(texts, metadatas=metadatas)
-    return Chroma.from_documents(docs, embedding_model)
+    vectordb = Chroma.from_documents(docs, embedding_model)
+
+    return vectordb
 
 
+# 🔹 Answer questions
 def get_answer(question, vectordb):
     retriever = vectordb.as_retriever(search_kwargs={"k": 4})
-    docs = retriever.get_relevant_documents(question)
+
+    # ✅ NEW LangChain syntax
+    docs = retriever.invoke(question)
 
     context = "\n\n".join(d.page_content for d in docs)
     context = context[:1800]
