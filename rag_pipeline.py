@@ -32,29 +32,34 @@ def get_answer(question, vectordb):
         question = "Explain " + question
 
     docs = retriever.invoke(question)
-
     context = "\n\n".join(d.page_content for d in docs)
 
-    response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are answering using website extracts. "
-                    "The context may contain multiple text fragments from the same article. "
-                    "They ARE related. Combine them logically to answer. "
-                    "Use only the context. If missing, say: "
-                    "'The answer is not available on the provided website.'"
-                )
-            },
-            {
-                "role": "user",
-                "content": f"Context:\n{context}\n\nQuestion:\n{question}"
-            }
-        ],
-        temperature=0,
-        max_tokens=300
-    )
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a question-answering system that must rely ONLY on the given context.\n"
+                        "Do not add information that is not directly stated in the context.\n"
+                        "Do not explain beyond what is written.\n"
+                        "If multiple pieces of context are provided, merge them carefully.\n"
+                        "If the answer is not explicitly found, say exactly: "
+                        "'The answer is not available on the provided website.'"
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"Context:\n{context}\n\nQuestion:\n{question}"
+                }
+            ],
+            temperature=0,
+            max_tokens=300
+        )
 
-    return response.choices[0].message.content.strip()
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        print("LLM ERROR:", e)
+        return "LLM request failed."

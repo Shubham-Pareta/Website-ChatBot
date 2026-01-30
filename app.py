@@ -31,7 +31,6 @@ if st.button("Index Website") and url:
             st.error("No readable content found.")
 
 
-# ✅ HANDLE INPUT FIRST
 if st.session_state.vectordb:
     user_input = st.chat_input("Ask a question")
 
@@ -44,7 +43,6 @@ if st.session_state.vectordb:
         st.session_state.messages.append({"role": "assistant", "content": answer})
 
 
-# ✅ THEN DISPLAY MESSAGES
 if st.session_state.messages:
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
